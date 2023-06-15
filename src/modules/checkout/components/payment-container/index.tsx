@@ -21,6 +21,10 @@ const PaymentInfoMap: Record<string, { title: string; description: string }> = {
     title: "iDEAL",
     description: "Secure payment with iDEAL",
   },
+  "razorpay": {
+    title: "razropay",
+    description: "Secure payment with Razorpay",
+  },
   paypal: {
     title: "PayPal",
     description: "Secure payment with PayPal",

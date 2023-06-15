@@ -4,6 +4,7 @@ import {
   Address,
   Cart,
   Customer,
+  StorePostCartsCartPaymentSessionUpdateReq,
   StorePostCartsCartReq,
 } from "@medusajs/medusa"
 import Wrapper from "@modules/checkout/components/payment-wrapper"
@@ -16,6 +17,7 @@ import {
   useRegions,
   useSetPaymentSession,
   useUpdateCart,
+  useUpdatePaymentSession,
 } from "medusa-react"
 import { useRouter } from "next/router"
 import React, { createContext, useContext, useEffect, useMemo } from "react"
@@ -53,7 +55,8 @@ interface CheckoutContext {
   setSavedAddress: (address: Address) => void
   setShippingOption: (soId: string) => void
   setPaymentSession: (providerId: string) => void
-  onPaymentCompleted: () => void
+  onPaymentCompleted: () => void,
+  updatePaymentSession:(providerId: string, data: StorePostCartsCartPaymentSessionUpdateReq) => void
 }
 
 const CheckoutContext = createContext<CheckoutContext | null>(null)
@@ -94,8 +97,11 @@ export const CheckoutProvider = ({ children }: CheckoutProviderProps) => {
 
   const { shipping_options } = useCartShippingOptions(cart?.id!, {
     enabled: !!cart?.id,
-  })
-
+  });
+  const {
+    mutate: updatePaymentSessionMutation,
+    isLoading: updatingPaymentSession,
+  } = useUpdatePaymentSession(cart?.id!)
   const { regions } = useRegions()
 
   const { resetCart, setRegion } = useStore()
@@ -319,6 +325,21 @@ export const CheckoutProvider = ({ children }: CheckoutProviderProps) => {
       },
     })
   }
+  const updatePaymentSession = (providerId: string,data:StorePostCartsCartPaymentSessionUpdateReq) => {
+    if (cart) {
+      updatePaymentSessionMutation(
+        {
+          provider_id: providerId,
+          ...data
+        },
+        {
+          onSuccess: ({ cart }) => {
+            setCart(cart)
+          },
+        }
+      )
+    }
+  }
 
   return (
     <FormProvider {...methods}>
@@ -336,6 +357,7 @@ export const CheckoutProvider = ({ children }: CheckoutProviderProps) => {
           setShippingOption,
           setPaymentSession,
           onPaymentCompleted,
+          updatePaymentSession
         }}
       >
         <Wrapper paymentSession={cart?.payment_session}>{children}</Wrapper>
